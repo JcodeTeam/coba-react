@@ -5,6 +5,9 @@ import CategoriesPage from './pages/CategoriesPage';
 import ItemList from './pages/ItemList';
 import LoginPage from './pages/LoginPage';
 import Navbar from './components/Navbar';
+import ReportExportForm from './pages/ReportExportForm';
+import ItemForm from './pages/ItemForm';
+import { BarangMasukForm, BarangKeluarForm} from './pages/BarangForm';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(null); // null untuk menunggu pengecekan
@@ -56,6 +59,16 @@ function App() {
             )
           }
         />
+        <Route
+          path="/tambah"
+          element={
+            isAuthenticated ? (
+              <ItemForm />
+            ) : (
+              <Navigate to="/login" state={{ from: '/tambah' }} />
+            )
+          }
+        />
         {/* Halaman kategori */}
         <Route
           path="/categories"
@@ -64,6 +77,36 @@ function App() {
               <CategoriesPage />
             ) : (
               <Navigate to="/login" state={{ from: '/categories' }} />
+            )
+          }
+        />
+        <Route
+          path="/export-laporan"
+          element={
+            isAuthenticated ? (
+              <ReportExportForm />
+            ) : (
+              <Navigate to="/login" state={{ from: '/export-laporan' }} />
+            )
+          }
+        />
+        <Route
+          path="/barang-masuk"
+          element={
+            isAuthenticated ? (
+              <BarangMasukForm />
+            ) : (
+              <Navigate to="/login" state={{ from: '/barang-masuk' }} />
+            )
+          }
+        />
+        <Route
+          path="/barang-keluar"
+          element={
+            isAuthenticated ? (
+              <BarangKeluarForm />
+            ) : (
+              <Navigate to="/login" state={{ from: '/barang-keluar' }} />
             )
           }
         />

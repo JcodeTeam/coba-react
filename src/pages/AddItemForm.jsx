@@ -5,65 +5,77 @@ const AddItemForm = () => {
     const [formData, setFormData] = useState({
         name: '',
         category: '',
+        mainCategory: '',
         quantity: 0,
         location: '',
         condition: '',
-        image: ''
+        image: null
     });
 
     const [categories, setCategories] = useState([]);
+    const [rooms, setRooms] = useState([]);
     const [preview, setPreview] = useState(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
 
-    // Ambil data kategori dari backend
     useEffect(() => {
-        api.get('/categories')
-            .then(res => {
-                console.log(res.data.data);  // Log data kategori untuk memastikan isi response-nya
-                setCategories(res.data.data);
-            })
-            .catch(err => {
-                console.error(err);
-            });
+        const fetchData = async () => {
+            try {
+                const [catRes, roomRes] = await Promise.all([
+                    api.get('/categories'),
+                    api.get('/rooms')
+                ]);
+                setCategories(catRes.data.data);
+                setRooms(roomRes.data.data);
+            } catch (err) {
+                console.error('Gagal mengambil kategori/ruangan:', err);
+            }
+        };
+        fetchData();
     }, []);
 
-
-    // Handle perubahan input
     const handleChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const { name, value, files } = e.target;
+        if (name === 'image' && files.length > 0) {
+            const file = files[0];
+            setFormData(prev => ({ ...prev, image: file }));
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
-    // Convert gambar ke base64
-    const handleImage = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setFormData(prev => ({ ...prev, image: reader.result }));
-            setPreview(reader.result);
-        };
-        reader.readAsDataURL(file);
-    };
-
-    // Submit data
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setMessage('');
 
         try {
-            await api.post('/items', formData);
+            const form = new FormData();
+            Object.entries(formData).forEach(([key, value]) => {
+                form.append(key, value);
+            });
+
+            await api.post('/items', form, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
             setMessage('✅ Barang berhasil ditambahkan!');
             setFormData({
                 name: '',
                 category: '',
+                mainCategory: '',
                 quantity: 0,
                 location: '',
                 condition: '',
-                image: ''
+                image: null
             });
             setPreview(null);
         } catch (err) {
@@ -77,8 +89,14 @@ const AddItemForm = () => {
         <div className="max-w-md mx-auto p-4 bg-white shadow rounded">
             <h2 className="text-xl font-bold mb-4">Tambah Barang</h2>
             {message && <div className="mb-4 text-sm text-center">{message}</div>}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} encType="multipart/form-data">
                 <input name="name" type="text" placeholder="Nama Barang" onChange={handleChange} value={formData.name} className="input" required />
+
+                <select name="mainCategory" onChange={handleChange} value={formData.mainCategory} className="input" required>
+                    <option value="">Pilih Main Kategori</option>
+                    <option value="asset">Asset</option>
+                    <option value="non asset">Non Asset</option>
+                </select>
 
                 <select name="category" onChange={handleChange} value={formData.category} className="input" required>
                     <option value="">Pilih Kategori</option>
@@ -88,10 +106,22 @@ const AddItemForm = () => {
                 </select>
 
                 <input name="quantity" type="number" placeholder="Jumlah" onChange={handleChange} value={formData.quantity} className="input" required />
-                <input name="location" type="text" placeholder="Lokasi" onChange={handleChange} value={formData.location} className="input" required />
-                <input name="condition" type="text" placeholder="Kondisi" onChange={handleChange} value={formData.condition} className="input" required />
 
-                <input type="file" accept="image/*" onChange={handleImage} className="input" />
+                <select name="location" onChange={handleChange} value={formData.location} className="input" required>
+                    <option value="">Pilih Ruangan</option>
+                    {rooms.map(room => (
+                        <option key={room._id} value={room._id}>{room.name}</option>
+                    ))}
+                </select>
+
+                <select name="condition" onChange={handleChange} value={formData.condition} className="input" required>
+                    <option value="">Pilih Kondisi</option>
+                    <option value="Baik">Baik</option>
+                    <option value="Rusak Ringan">Rusak Ringan</option>
+                    <option value="Rusak Berat">Rusak Berat</option>
+                </select>
+
+                <input type="file" name="image" accept="image/*" onChange={handleChange} className="input" />
                 {preview && <img src={preview} alt="Preview" className="w-32 mt-2" />}
 
                 <button type="submit" disabled={loading} className="btn btn-primary mt-4 w-full">

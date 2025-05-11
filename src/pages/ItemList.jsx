@@ -34,18 +34,19 @@ const ItemList = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {items.map(item => (
-                    <div key={item._id} className="p-4 border rounded shadow">
-                        {item.image && (
+                    <div key={item._id} className="p-4 border rounded shadow bg-white">
+                        {item.image?.url && (
                             <img
-                                src={item.image}
+                                src={item.image.url}
                                 alt={item.name}
-                                className="w-full h-48 object-cover mb-2"
+                                className="w-full h-48 object-cover mb-2 rounded"
                             />
                         )}
                         <h3 className="text-xl font-semibold">{item.name}</h3>
+                        <p><strong>Main Kategori:</strong> {item.mainCategory}</p>
                         <p><strong>Kategori:</strong> {item.category?.name || '-'}</p>
                         <p><strong>Jumlah:</strong> {item.quantity}</p>
-                        <p><strong>Lokasi:</strong> {item.location}</p>
+                        <p><strong>Lokasi:</strong> {item.location?.name || '-'}</p>
                         <p><strong>Kondisi:</strong> {item.condition}</p>
                     </div>
                 ))}
